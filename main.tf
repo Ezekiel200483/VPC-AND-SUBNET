@@ -1,23 +1,32 @@
 provider "aws" {
- profile = "default"
+  profile = "default"
+  region  = "eu-west-3"  # Ensure you are operating in the correct region
 }
+
+variable "cidr_blocks" {
+  description = "CIDR blocks and name tags for VPC and subnets"
+  type        = list(object({
+    cidr_block = string
+    name       = string 
+  }))
+} 
 
 resource "aws_vpc" "development_vpc" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = var.cidr_blocks[0].cidr_block # Access the first element of the list
+
+  tags = {
+    Name = var.cidr_blocks[0].name 
+  }
 }
 
-resource "aws_subnet" "development_subnet" {
-  vpc_id = aws_vpc.development_vpc.id
-  cidr_block = "10.0.10.0/24"
-    availability_zone = "eu-west-3a"
+resource "aws_subnet" "dev_subnet_1" {
+  vpc_id            = aws_vpc.development_vpc.id 
+  cidr_block        = var.cidr_blocks[1].cidr_block # Access the second element of the list
+  availability_zone = "eu-west-3a"
+
+  tags = {
+    Name = var.cidr_blocks[1].name 
+  }
 }
 
-data "aws_vpc" "existing_vpc" {
-  default = true
-}
 
-resource "aws_subnet" "development_subnet_2" {
-  vpc_id = data.aws_vpc.existing_vpc.id
-  cidr_block = "172.31.48.0/20"
-    availability_zone = "eu-west-3a"
-}
